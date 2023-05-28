@@ -1,0 +1,25 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio Version 17
+VisualStudioVersion = 17.5.33424.131
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Alert-Server", "Alert-Server.csproj", "{C7BDCE6F-C79A-4D69-8C6D-023DD0BD1037}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{C7BDCE6F-C79A-4D69-8C6D-023DD0BD1037}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{C7BDCE6F-C79A-4D69-8C6D-023DD0BD1037}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{C7BDCE6F-C79A-4D69-8C6D-023DD0BD1037}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{C7BDCE6F-C79A-4D69-8C6D-023DD0BD1037}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(ExtensibilityGlobals) = postSolution
+		SolutionGuid = {3B10C9BF-2F3A-4287-BDA0-4D917DCBFF04}
+	EndGlobalSection
+EndGlobal

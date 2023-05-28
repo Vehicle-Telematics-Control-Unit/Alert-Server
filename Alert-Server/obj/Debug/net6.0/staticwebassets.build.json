@@ -1,0 +1,11 @@
+{
+  "Version": 1,
+  "Hash": "VjblcRryaVG9l9NyjoReNrwNrIC8l+LW5oTZ9uVlOS8=",
+  "Source": "Alert-Server",
+  "BasePath": "_content/Alert-Server",
+  "Mode": "Default",
+  "ManifestType": "Build",
+  "ReferencedProjectsConfiguration": [],
+  "DiscoveryPatterns": [],
+  "Assets": []
+}
