@@ -1,7 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using Microsoft.EntityFrameworkCore;
-using Microsoft.EntityFrameworkCore.Metadata;
+﻿using Microsoft.EntityFrameworkCore;
 
 namespace Alert_Server.Models
 {
@@ -36,13 +33,7 @@ namespace Alert_Server.Models
         public virtual DbSet<Tcu> Tcus { get; set; } = null!;
 
         protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
-        {
-            if (!optionsBuilder.IsConfigured)
-            {
-#warning To protect potentially sensitive information in your connection string, you should move it out of source code. You can avoid scaffolding the connection string by using the Name= syntax to read it from configuration - see https://go.microsoft.com/fwlink/?linkid=2131148. For more guidance on storing connection strings, see http://go.microsoft.com/fwlink/?LinkId=723263.
-                optionsBuilder.UseNpgsql("UserID=postgres;Password=postgres;Server=vehicleplus.cloud;Port=5435;Database=TCU; Integrated Security=true;Pooling=true;");
-            }
-        }
+            => optionsBuilder.UseNpgsql("Name=ConnectionStrings:TcuServerConnection");
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
