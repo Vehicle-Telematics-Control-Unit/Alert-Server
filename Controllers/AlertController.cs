@@ -57,7 +57,7 @@ namespace Alert_Server.Controllers
                 if (_obdCode == null)
                     return NotFound("Obd Code not Found");
 
-                Alert _alert = new Alert
+                Alert _alert = new()
                 {
                     TcuId = tcu.TcuId,
                     ObdCode = _obdCode.ObdCode1,
@@ -114,7 +114,7 @@ namespace Alert_Server.Controllers
 
         [HttpGet("token")]
         [Authorize] // authorize the user 
-        public async Task<IActionResult> GetDeviceToken([FromBody] string token)
+        public async Task<IActionResult> GetDeviceToken()
         {
             try
             {

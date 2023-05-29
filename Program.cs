@@ -16,6 +16,7 @@ using Alert_Server.Models;
 using Google;
 using Alert_server.Data;
 using Alert_Server.Notification_service;
+using Microsoft.Extensions.Configuration;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -80,37 +81,42 @@ builder.Services.AddAuthentication(options =>
                         IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(builder.Configuration["JWT:Secret"]))
                     };
                 });
+
+
 builder.Services.AddSwaggerGen(c =>
 {
-    c.SwaggerDoc("v1", new OpenApiInfo { Title = "My API", Version = "v1" });
-
-    // Add JWT bearer authentication to Swagger
-    var securityScheme = new OpenApiSecurityScheme
+    c.SwaggerDoc("v1", new OpenApiInfo
+    {
+        Title = "JWTToken_Auth_API",
+        Version = "v1"
+    });
+    c.AddSecurityDefinition("Bearer", new OpenApiSecurityScheme()
     {
         Name = "Authorization",
+        Type = SecuritySchemeType.ApiKey,
+        Scheme = "Bearer",
         BearerFormat = "JWT",
-        Description = "Enter your Bearer token in the text input below.",
         In = ParameterLocation.Header,
-        Type = SecuritySchemeType.Http,
-        Scheme = "bearer",
-        Reference = new OpenApiReference
+        Description = "JWT Authorization header using the Bearer scheme. \r\n\r\n Enter 'Bearer' [space] and then your token in the text input below.\r\n\r\nExample: \"Bearer 1safsfsdfdfd\"",
+    });
+    c.AddSecurityRequirement(new OpenApiSecurityRequirement {
         {
-            Type = ReferenceType.SecurityScheme,
-            Id = JwtBearerDefaults.AuthenticationScheme
+            new OpenApiSecurityScheme {
+                Reference = new OpenApiReference {
+                    Type = ReferenceType.SecurityScheme,
+                        Id = "Bearer"
+                }
+            },
+            Array.Empty<string>()
         }
-    };
-
-    c.AddSecurityDefinition(JwtBearerDefaults.AuthenticationScheme, securityScheme);
-
-    c.AddSecurityRequirement(new OpenApiSecurityRequirement
-        {
-            { securityScheme, new string[] { } }
-        });
+    });
 });
+
+var googleCredentialsPath = builder.Configuration.GetSection("notifications:GoogleCredentialsFile").Value;
 
 var defaultApp = FirebaseApp.Create(new AppOptions()
 {
-    Credential = GoogleCredential.FromFile(Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "vehicleplus-notifications-firebase-adminsdk-ayplo-2e54d6d22b.json")),
+    Credential = GoogleCredential.FromFile(googleCredentialsPath),
 });
 
 
