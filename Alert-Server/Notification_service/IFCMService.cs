@@ -1,7 +1,9 @@
-﻿namespace Alert_Server.Notification_service
+﻿using Alert_Server.Models;
+
+namespace Alert_Server.Notification_service
 {
     public interface IFCMService
     {
-        Task<dynamic> SendNotificationAsync(string notificationToken);
+        Task<dynamic> SendNotificationAsync(NotificationModel notificationModel);
     }
 }

@@ -27,9 +27,9 @@ namespace Alert_Server.Controllers
 
         [HttpPost("receive")]
         [Authorize(Policy = "TCUOnly")]
-        public async Task<IActionResult> ReceiveMalfunctionAlert()
+        public async Task<IActionResult> ReceiveMalfunctionAlert([FromBody] string obdCode)
         {
-            Alert alert = new Alert();
+           
             // Get the TCU claims from the current TCU principal
             var claimsIdentity = User.Identity as ClaimsIdentity;
             // TCU is authorized, extract the TCU identifier (Mac address)
@@ -42,14 +42,42 @@ namespace Alert_Server.Controllers
                         select _tcu).FirstOrDefault();
             if (tcu == null)
                 return Unauthorized();
+            if (string.IsNullOrEmpty(obdCode))
+                return BadRequest("OBD code is required");
 
+            if (tcu.DevicesTcus != null)
+            {
+                List<Device> devices = tcu.DevicesTcus.Select(dt => dt.Device).ToList();
 
+                ObdCode? _obdCode = (from _obd in tcuContext.ObdCodes where _obd.ObdCode1 == obdCode select _obd).FirstOrDefault();
+                if (_obdCode == null)
+                    return NotFound("Obd Code not Found");
+                Alert _alert = new Alert
+                {
+                    TcuId = tcu.TcuId,
+                    ObdCode = _obdCode.ObdCode1,
+                    LogTimeStamp = DateTime.Now,
+
+                };
+                tcuContext.Alerts.Add(_alert);
+                await tcuContext.SaveChangesAsync();
+
+                foreach (Device device in devices)
+                {
+                    var deviceNotificationToken = device.NotificationToken;
+                    if (deviceNotificationToken == null)
+                        return NotFound("Notification token not found to device" + device.DeviceId);
+                    // send notification
+                    var messageId = await _service.SendNotificationAsync(new NotificationModel { title = "alert", message = _obdCode.Description, notificationToken = device.NotificationToken });
+                    if (messageId == null)
+                        return BadRequest("can't send notification");
+
+                }
+            }
             return Ok();
-
-
         }
 
-        [HttpPost("send")]
+        /*[HttpPost("send")]
         public async Task<IActionResult> SendNotification([FromBody] string deviceId)
         {
             try
@@ -64,7 +92,7 @@ namespace Alert_Server.Controllers
                     return NotFound("notification token is null");
                 }
 
-                var messageId = await _service.SendNotificationAsync(device.NotificationToken);
+                var messageId = await _service.SendNotificationAsync(new NotificationModel { title ="alert", message="test", notificationToken = device.NotificationToken });
                 if (messageId != null)
                 {
                     return Ok(messageId);
@@ -112,5 +140,6 @@ namespace Alert_Server.Controllers
 
 
 
+    }*/
     }
 }
