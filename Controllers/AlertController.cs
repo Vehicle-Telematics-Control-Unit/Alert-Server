@@ -47,11 +47,16 @@ namespace Alert_Server.Controllers
 
             if (tcu.DevicesTcus != null)
             {
-                List<Device> devices = tcu.DevicesTcus.Select(dt => dt.Device).ToList();
+                List<Device> devices =(from _device in tcuContext.Devices
+                                       join _deviceTCU in tcuContext.DevicesTcus
+                                       on _device.DeviceId equals _deviceTCU.DeviceId
+                                       where _deviceTCU.TcuId == tcu.TcuId
+                                       select _device).ToList();
 
                 ObdCode? _obdCode = (from _obd in tcuContext.ObdCodes where _obd.ObdCode1 == obdCode select _obd).FirstOrDefault();
                 if (_obdCode == null)
                     return NotFound("Obd Code not Found");
+
                 Alert _alert = new Alert
                 {
                     TcuId = tcu.TcuId,
@@ -77,7 +82,7 @@ namespace Alert_Server.Controllers
             return Ok();
         }
 
-        /*[HttpPost("send")]
+        [HttpPost("send")]
         public async Task<IActionResult> SendNotification([FromBody] string deviceId)
         {
             try
@@ -140,6 +145,6 @@ namespace Alert_Server.Controllers
 
 
 
-    }*/
+    
     }
 }
