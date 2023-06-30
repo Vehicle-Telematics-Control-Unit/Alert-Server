@@ -1,22 +1,15 @@
+using Alert_server.Data;
+using Alert_Server.Models;
+using Alert_Server.Services;
+using FirebaseAdmin;
+using Google.Apis.Auth.OAuth2;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
 using Microsoft.OpenApi.Models;
-
+using MQTTnet;
 using System.Text;
-
-using FirebaseAdmin;
-using FirebaseAdmin.Messaging;
-using Google.Apis.Auth.OAuth2;
-using System;
-using System.IO;
-using System.Threading.Tasks;
-using Alert_Server.Models;
-using Google;
-using Alert_server.Data;
-using Alert_Server.Notification_service;
-using Microsoft.Extensions.Configuration;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -26,9 +19,16 @@ builder.Services.AddControllers().AddNewtonsoftJson(options =>
 );
 
 
-
 builder.Services.AddTransient<IFCMService, FCMService>();
 
+builder.Services.AddSingleton(serviceProvider =>
+{
+    var mqttFactory = new MqttFactory();
+    var mqttClient = mqttFactory.CreateMqttClient();
+    return mqttClient;
+});
+
+builder.Services.AddHostedService<MQTTservice>();
 
 
 builder.Services.AddIdentity<IdentityUser, IdentityRole>()
@@ -37,17 +37,17 @@ builder.Services.AddIdentity<IdentityUser, IdentityRole>()
 
 builder.Services.AddDbContext<ApplicationDbContext>(options =>
         options.UseNpgsql(
-            builder.Configuration.GetConnectionString("DefaultConnection")));
+            builder.Configuration.GetConnectionString("TcuServerConnection")));
 
 builder.Services.AddDbContext<TCUContext>(options =>
         options.UseNpgsql(
-            builder.Configuration.GetConnectionString("DefaultConnection")));
+            builder.Configuration.GetConnectionString("TcuServerConnection")));
 
 
+builder.Services.AddControllers().AddNewtonsoftJson(options =>
+    options.SerializerSettings.ReferenceLoopHandling = Newtonsoft.Json.ReferenceLoopHandling.Ignore
+);
 
-
-
-builder.Services.AddControllers();
 // Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
@@ -59,6 +59,11 @@ builder.Services.AddAuthorization(options =>
     options.AddPolicy("TCUOnly", policy =>
     {
         policy.RequireClaim("TCU", "True");
+    });
+
+    options.AddPolicy("MobileOnly", policy =>
+    {
+        policy.RequireClaim("deviceId");
     });
 });
 
@@ -82,24 +87,25 @@ builder.Services.AddAuthentication(options =>
                     };
                 });
 
-
-builder.Services.AddSwaggerGen(c =>
+if (builder.Environment.IsDevelopment())
 {
-    c.SwaggerDoc("v1", new OpenApiInfo
+    builder.Services.AddSwaggerGen(c =>
     {
-        Title = "JWTToken_Auth_API",
-        Version = "v1"
-    });
-    c.AddSecurityDefinition("Bearer", new OpenApiSecurityScheme()
-    {
-        Name = "Authorization",
-        Type = SecuritySchemeType.ApiKey,
-        Scheme = "Bearer",
-        BearerFormat = "JWT",
-        In = ParameterLocation.Header,
-        Description = "JWT Authorization header using the Bearer scheme. \r\n\r\n Enter 'Bearer' [space] and then your token in the text input below.\r\n\r\nExample: \"Bearer 1safsfsdfdfd\"",
-    });
-    c.AddSecurityRequirement(new OpenApiSecurityRequirement {
+        c.SwaggerDoc("v1", new OpenApiInfo
+        {
+            Title = "JWTToken_Auth_API",
+            Version = "v1"
+        });
+        c.AddSecurityDefinition("Bearer", new OpenApiSecurityScheme()
+        {
+            Name = "Authorization",
+            Type = SecuritySchemeType.ApiKey,
+            Scheme = "Bearer",
+            BearerFormat = "JWT",
+            In = ParameterLocation.Header,
+            Description = "JWT Authorization header using the Bearer scheme. \r\n\r\n Enter 'Bearer' [space] and then your token in the text input below.\r\n\r\nExample: \"Bearer 1safsfsdfdfd\"",
+        });
+        c.AddSecurityRequirement(new OpenApiSecurityRequirement {
         {
             new OpenApiSecurityScheme {
                 Reference = new OpenApiReference {
@@ -110,7 +116,9 @@ builder.Services.AddSwaggerGen(c =>
             Array.Empty<string>()
         }
     });
-});
+    });
+}
+
 
 var googleCredentialsPath = builder.Configuration.GetSection("notifications:GoogleCredentialsFile").Value;
 
@@ -129,6 +137,7 @@ if (app.Environment.IsDevelopment())
     app.UseSwagger();
     app.UseSwaggerUI();
 }
+
 
 app.UseHttpsRedirection();
 app.UseStaticFiles();

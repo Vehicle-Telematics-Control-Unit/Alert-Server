@@ -1,6 +1,6 @@
 ﻿using Alert_Server.Models;
 
-namespace Alert_Server.Notification_service
+namespace Alert_Server.Services
 {
     public interface IFCMService
     {

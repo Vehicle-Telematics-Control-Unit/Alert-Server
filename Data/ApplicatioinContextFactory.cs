@@ -1,5 +1,4 @@
-﻿using Alert_server.Data;
-using Microsoft.EntityFrameworkCore;
+﻿using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Design;
 
 namespace Alert_server.Data

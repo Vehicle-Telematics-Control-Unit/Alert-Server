@@ -1,9 +1,7 @@
 ﻿using Alert_Server.Models;
-using Alert_Server.Notification_service;
 using FirebaseAdmin.Messaging;
-using System.Configuration;
 
-namespace Alert_Server.Notification_service
+namespace Alert_Server.Services
 {
     public class FCMService : IFCMService
     {

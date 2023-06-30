@@ -1,4 +1,7 @@
-﻿using Microsoft.EntityFrameworkCore;
+﻿using System;
+using System.Collections.Generic;
+using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore.Metadata;
 
 namespace Alert_Server.Models
 {
@@ -14,6 +17,7 @@ namespace Alert_Server.Models
         }
 
         public virtual DbSet<Alert> Alerts { get; set; } = null!;
+        public virtual DbSet<App> Apps { get; set; } = null!;
         public virtual DbSet<AspNetRole> AspNetRoles { get; set; } = null!;
         public virtual DbSet<AspNetRoleClaim> AspNetRoleClaims { get; set; } = null!;
         public virtual DbSet<AspNetUser> AspNetUsers { get; set; } = null!;
@@ -25,15 +29,18 @@ namespace Alert_Server.Models
         public virtual DbSet<Device> Devices { get; set; } = null!;
         public virtual DbSet<DevicesTcu> DevicesTcus { get; set; } = null!;
         public virtual DbSet<LockRequest> LockRequests { get; set; } = null!;
-        public virtual DbSet<ObdCode> ObdCodes { get; set; } = null!;
-        public virtual DbSet<ObdFaultAreaCode> ObdFaultAreaCodes { get; set; } = null!;
-        public virtual DbSet<ObdSubSystemCode> ObdSubSystemCodes { get; set; } = null!;
+        public virtual DbSet<Model> Models { get; set; } = null!;
         public virtual DbSet<Otptoken> Otptokens { get; set; } = null!;
         public virtual DbSet<RequestStatus> RequestStatuses { get; set; } = null!;
         public virtual DbSet<Tcu> Tcus { get; set; } = null!;
 
         protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
-            => optionsBuilder.UseNpgsql("Name=ConnectionStrings:TcuServerConnection");
+        {
+            if (!optionsBuilder.IsConfigured)
+            {
+                optionsBuilder.UseNpgsql("Name=ConnectionStrings:TcuServerConnection");
+            }
+        }
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
@@ -42,21 +49,28 @@ namespace Alert_Server.Models
                 entity.HasKey(e => new { e.LogTimeStamp, e.ObdCode, e.TcuId })
                     .HasName("Alerts_pkey");
 
-                entity.Property(e => e.ObdCode)
-                    .HasMaxLength(5)
-                    .IsFixedLength();
-
-                entity.HasOne(d => d.ObdCodeNavigation)
-                    .WithMany(p => p.Alerts)
-                    .HasForeignKey(d => d.ObdCode)
-                    .OnDelete(DeleteBehavior.ClientSetNull)
-                    .HasConstraintName("Alert_ObdCodes");
+                entity.Property(e => e.LogTimeStamp).HasColumnType("timestamp without time zone");
 
                 entity.HasOne(d => d.Tcu)
                     .WithMany(p => p.Alerts)
                     .HasForeignKey(d => d.TcuId)
                     .OnDelete(DeleteBehavior.ClientSetNull)
                     .HasConstraintName("Alert_TCU");
+            });
+
+            modelBuilder.Entity<App>(entity =>
+            {
+                entity.Property(e => e.AppId).UseIdentityAlwaysColumn();
+
+                entity.Property(e => e.EnvVariables).HasColumnName("ENV_VARIABLES");
+
+                entity.Property(e => e.LatestUpdate).HasColumnType("timestamp without time zone");
+
+                entity.Property(e => e.ReleaseDate).HasColumnType("timestamp without time zone");
+
+                entity.Property(e => e.Repo).HasColumnName("repo");
+
+                entity.Property(e => e.Tag).HasColumnName("tag");
             });
 
             modelBuilder.Entity<AspNetRole>(entity =>
@@ -137,7 +151,11 @@ namespace Alert_Server.Models
 
                 entity.Property(e => e.DeviceId).HasMaxLength(150);
 
-                entity.Property(e => e.CreationTimeStamp).HasDefaultValueSql("now()");
+                entity.Property(e => e.CreationTimeStamp)
+                    .HasColumnType("timestamp without time zone")
+                    .HasDefaultValueSql("now()");
+
+                entity.Property(e => e.VerificationTimeStamp).HasColumnType("timestamp without time zone");
 
                 entity.HasOne(d => d.Device)
                     .WithMany(p => p.ConnectionRequests)
@@ -201,10 +219,7 @@ namespace Alert_Server.Models
 
                 entity.Property(e => e.DeviceId).HasMaxLength(150);
 
-                entity.Property(e => e.IsActive)
-                    .IsRequired()
-                    .HasColumnName("isActive")
-                    .HasDefaultValueSql("true");
+                entity.Property(e => e.IsActive).HasColumnName("isActive");
 
                 entity.Property(e => e.IsPrimary).HasColumnName("isPrimary");
 
@@ -248,38 +263,11 @@ namespace Alert_Server.Models
                     .HasConstraintName("LockRequest_TCU");
             });
 
-            modelBuilder.Entity<ObdCode>(entity =>
+            modelBuilder.Entity<Model>(entity =>
             {
-                entity.HasKey(e => e.ObdCode1)
-                    .HasName("ObdCodes_pkey");
+                entity.ToTable("Model");
 
-                entity.Property(e => e.ObdCode1)
-                    .HasMaxLength(5)
-                    .HasColumnName("ObdCode")
-                    .IsFixedLength();
-
-                entity.Property(e => e.IsGeneric)
-                    .IsRequired()
-                    .HasColumnName("isGeneric")
-                    .HasDefaultValueSql("true");
-            });
-
-            modelBuilder.Entity<ObdFaultAreaCode>(entity =>
-            {
-                entity.HasKey(e => new { e.AreaId, e.Description })
-                    .HasName("ObdFaultAreaCodes_pkey");
-
-                entity.Property(e => e.AreaId).HasMaxLength(1);
-            });
-
-            modelBuilder.Entity<ObdSubSystemCode>(entity =>
-            {
-                entity.HasKey(e => e.SubsystemId)
-                    .HasName("ObdSubSystemCodes_pkey");
-
-                entity.Property(e => e.SubsystemId)
-                    .HasMaxLength(1)
-                    .ValueGeneratedNever();
+                entity.Property(e => e.Id).UseIdentityAlwaysColumn();
             });
 
             modelBuilder.Entity<Otptoken>(entity =>
@@ -321,11 +309,29 @@ namespace Alert_Server.Models
 
                 entity.Property(e => e.Mac).HasMaxLength(17);
 
+                entity.HasOne(d => d.Model)
+                    .WithMany(p => p.Tcus)
+                    .HasForeignKey(d => d.ModelId)
+                    .HasConstraintName("TCU_Model");
+
                 entity.HasOne(d => d.User)
                     .WithMany(p => p.Tcus)
                     .HasForeignKey(d => d.UserId)
                     .OnDelete(DeleteBehavior.ClientSetNull)
                     .HasConstraintName("TCU_AspNetUsers");
+
+                entity.HasMany(d => d.Apps)
+                    .WithMany(p => p.Tcus)
+                    .UsingEntity<Dictionary<string, object>>(
+                        "TcuApp",
+                        l => l.HasOne<App>().WithMany().HasForeignKey("AppId").OnDelete(DeleteBehavior.ClientSetNull).HasConstraintName("APP_FOREIGN"),
+                        r => r.HasOne<Tcu>().WithMany().HasForeignKey("TcuId").OnDelete(DeleteBehavior.ClientSetNull).HasConstraintName("TCU_FOREIGN"),
+                        j =>
+                        {
+                            j.HasKey("TcuId", "AppId").HasName("PrimaryKey");
+
+                            j.ToTable("TcuAPPs");
+                        });
             });
 
             modelBuilder.HasSequence("otptokens_id_seq");
