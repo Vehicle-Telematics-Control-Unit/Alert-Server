@@ -11,6 +11,7 @@ namespace Alert_Server.Models
             ConnectionRequests = new HashSet<ConnectionRequest>();
             DevicesTcus = new HashSet<DevicesTcu>();
             LockRequests = new HashSet<LockRequest>();
+            Tcufeatures = new HashSet<Tcufeature>();
         }
 
         public string? IpAddress { get; set; }
@@ -29,5 +30,6 @@ namespace Alert_Server.Models
         public virtual ICollection<ConnectionRequest> ConnectionRequests { get; set; }
         public virtual ICollection<DevicesTcu> DevicesTcus { get; set; }
         public virtual ICollection<LockRequest> LockRequests { get; set; }
+        public virtual ICollection<Tcufeature> Tcufeatures { get; set; }
     }
 }

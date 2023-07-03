@@ -35,6 +35,7 @@ namespace Alert_Server.Models
         public virtual DbSet<Otptoken> Otptokens { get; set; } = null!;
         public virtual DbSet<RequestStatus> RequestStatuses { get; set; } = null!;
         public virtual DbSet<Tcu> Tcus { get; set; } = null!;
+        public virtual DbSet<Tcufeature> Tcufeatures { get; set; } = null!;
 
         protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
         {
@@ -98,6 +99,9 @@ namespace Alert_Server.Models
 
             modelBuilder.Entity<AspNetUser>(entity =>
             {
+                entity.HasIndex(e => e.UserName, "UK_AspNetUsers")
+                    .IsUnique();
+
                 entity.Property(e => e.Email).HasMaxLength(256);
 
                 entity.Property(e => e.NormalizedEmail).HasMaxLength(256);
@@ -358,6 +362,30 @@ namespace Alert_Server.Models
                     .HasForeignKey(d => d.UserId)
                     .OnDelete(DeleteBehavior.ClientSetNull)
                     .HasConstraintName("TCU_AspNetUsers");
+            });
+
+            modelBuilder.Entity<Tcufeature>(entity =>
+            {
+                entity.HasKey(e => new { e.TcuId, e.FeatureId })
+                    .HasName("TCUFeatures_pkey");
+
+                entity.ToTable("TCUFeatures");
+
+                entity.Property(e => e.IsActive)
+                    .IsRequired()
+                    .HasDefaultValueSql("true");
+
+                entity.HasOne(d => d.Feature)
+                    .WithMany(p => p.Tcufeatures)
+                    .HasForeignKey(d => d.FeatureId)
+                    .OnDelete(DeleteBehavior.ClientSetNull)
+                    .HasConstraintName("Feature_FOREIGN");
+
+                entity.HasOne(d => d.Tcu)
+                    .WithMany(p => p.Tcufeatures)
+                    .HasForeignKey(d => d.TcuId)
+                    .OnDelete(DeleteBehavior.ClientSetNull)
+                    .HasConstraintName("TCU_FOREIGN");
             });
 
             modelBuilder.HasSequence("otptokens_id_seq");
