@@ -88,7 +88,7 @@ namespace Alert_Server.Controllers
 
                 if (state == "FAULTY")
                      _description = "You need to check the " + description;
-                else if (state == "Okay")
+                else if (state == "OKAY")
                     _description = description + " in good condition";
 
 
