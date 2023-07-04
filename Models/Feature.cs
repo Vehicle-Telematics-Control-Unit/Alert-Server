@@ -9,6 +9,7 @@ namespace Alert_Server.Models
         {
             Apps = new HashSet<App>();
             ModelsFeatures = new HashSet<ModelsFeature>();
+            Tcufeatures = new HashSet<Tcufeature>();
         }
 
         public long FeatureId { get; set; }
@@ -16,9 +17,11 @@ namespace Alert_Server.Models
         public DateTime ReleaseDate { get; set; }
         public string Description { get; set; } = null!;
         public long AppId { get; set; }
+        public bool IsActive { get; set; }
 
         public virtual App App { get; set; } = null!;
         public virtual ICollection<App> Apps { get; set; }
         public virtual ICollection<ModelsFeature> ModelsFeatures { get; set; }
+        public virtual ICollection<Tcufeature> Tcufeatures { get; set; }
     }
 }
