@@ -8,7 +8,6 @@ using MQTTnet;
 using MQTTnet.Client;
 using MQTTnet.Protocol;
 using Newtonsoft.Json.Linq;
-using System.Reflection.Emit;
 using System.Security.Claims;
 
 
@@ -108,7 +107,7 @@ namespace Alert_Server.Controllers
         }
 
        
-        [HttpPost]
+        [HttpPost("WakeUp")]
         [Authorize(Policy = "MobileOnly")]
         public async Task<IActionResult> WakeUpTCU()
         {
