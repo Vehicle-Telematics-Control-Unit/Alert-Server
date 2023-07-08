@@ -111,7 +111,6 @@ namespace Alert_Server.Controllers
         [Authorize(Policy = "MobileOnly")]
         public async Task<IActionResult> WakeUpTCU()
         {
-            Console.WriteLine("hello");
             if (User.Identity == null)
                 return Unauthorized();
 
